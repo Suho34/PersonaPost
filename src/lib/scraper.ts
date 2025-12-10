@@ -57,10 +57,10 @@ export async function scrapeAndChunk(url: string) {
 
       browser = await puppeteerCore.launch({
         args: chromium.args,
-        defaultViewport: chromium.defaultViewport,
+        defaultViewport: null,
         executablePath: await chromium.executablePath(),
-        headless: chromium.headless,
-        ignoreHTTPSErrors: true,
+        headless: true,
+
       });
     } else {
       console.log("Launching standard Puppeteer (Local)...");
@@ -78,7 +78,7 @@ export async function scrapeAndChunk(url: string) {
 
     // C. Extract Text
     // We evaluate function inside the browser context
-    const rawText = await page.evaluate(() => {
+    const rawText = await (page as any).evaluate(() => {
       // Remove junk elements inside the DOM before extracting text
       const junkSelectors = [
         "script", "style", "nav", "footer", "header", "iframe", "noscript",
@@ -90,7 +90,7 @@ export async function scrapeAndChunk(url: string) {
 
       // Try to get main content, fallback to body
       const main = document.querySelector("main") || document.querySelector("article") || document.body;
-      return main ? main.innerText : "";
+      return main ? (main as HTMLElement).innerText : "";
     });
 
     await browser.close();
