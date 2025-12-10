@@ -3,8 +3,11 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 export interface IGeneratedPost extends Document {
   userId: string;
   content: string;
-  platform: "twitter" | "linkedin"; // Future proofing
+  platform: "twitter" | "linkedin" | "instagram";
   isUsed: boolean; // Has the user copied/posted this?
+  copyCount?: number; // New analytics field
+  viralScore?: number; // AI score 0-100
+  feedback?: string; // AI feedback
 }
 
 const GeneratedPostSchema = new Schema<IGeneratedPost>(
@@ -25,6 +28,16 @@ const GeneratedPostSchema = new Schema<IGeneratedPost>(
     isUsed: {
       type: Boolean,
       default: false,
+    },
+    copyCount: {
+      type: Number,
+      default: 0,
+    },
+    viralScore: {
+      type: Number,
+    },
+    feedback: {
+      type: String,
     },
   },
   { timestamps: true }
