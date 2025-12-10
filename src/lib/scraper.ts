@@ -42,10 +42,33 @@ export async function scrapeAndChunk(url: string) {
     console.log(`Visiting (Puppeteer): ${url}`);
 
     // A. Launch Puppeteer
-    const browser = await puppeteer.launch({
-      headless: true, // "new" is default efficiently now
-      args: ["--no-sandbox", "--disable-setuid-sandbox"], // Required for some unexpected environments
-    });
+    // A. Launch Puppeteer (Conditional for Vercel vs Local)
+    let browser;
+
+    // Check if running on Vercel/Production (usually implies AWS Lambda environment or explicitly set)
+    if (process.env.NODE_ENV === "production" || process.env.VERCEL) {
+      console.log("Launching Puppeteer Core with Chromium (Production/Vercel)...");
+      // Dynamic imports to avoid build issues in some environments if not strictly required
+      const chromium = (await import("@sparticuz/chromium")).default;
+      const puppeteerCore = (await import("puppeteer-core")).default;
+
+      // Optional: Load a specific font if needed, otherwise skip
+      // await chromium.font('https://raw.githack.com/googlei18n/noto-emoji/master/fonts/NotoColorEmoji.ttf');
+
+      browser = await puppeteerCore.launch({
+        args: chromium.args,
+        defaultViewport: chromium.defaultViewport,
+        executablePath: await chromium.executablePath(),
+        headless: chromium.headless,
+        ignoreHTTPSErrors: true,
+      });
+    } else {
+      console.log("Launching standard Puppeteer (Local)...");
+      browser = await puppeteer.launch({
+        headless: true,
+        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      });
+    }
 
     const page = await browser.newPage();
 
